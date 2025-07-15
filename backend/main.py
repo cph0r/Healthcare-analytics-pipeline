@@ -25,17 +25,9 @@ async def upload_csv(file: UploadFile = File(...)):
     contents = await file.read()
     try:
         df = pd.read_csv(io.BytesIO(contents))
-        # Example cleaning: drop rows with all NaNs
         df_clean = df.dropna(how='all')
         # You could store df_clean to disk or a database here
-        preview = df_clean.head().to_dict(orient='records')
-        return {
-            "filename": file.filename,
-            "rows": len(df_clean),
-            "columns": list(df_clean.columns),
-            "preview": preview,
-            "message": "CSV uploaded and cleaned successfully! 🧹✨"
-        }
+        return {"message": "CSV uploaded and cleaned successfully! 🧹✨"}
     except Exception as e:
         return JSONResponse(status_code=400, content={"error": f"Failed to process CSV: {str(e)}"})
 
