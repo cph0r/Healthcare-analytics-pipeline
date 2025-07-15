@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 import io
+import os
 
 app = FastAPI()
 
@@ -24,10 +25,22 @@ async def upload_csv(file: UploadFile = File(...)):
         return JSONResponse(status_code=400, content={"error": "Only CSV files are allowed."})
     contents = await file.read()
     try:
+        # Ensure directories exist
+        raw_dir = os.path.join(os.getcwd(), "data", "raw")
+        processed_dir = os.path.join(os.getcwd(), "data", "processed")
+        os.makedirs(raw_dir, exist_ok=True)
+        os.makedirs(processed_dir, exist_ok=True)
+        # Save the raw file
+        raw_path = os.path.join(raw_dir, file.filename)
+        with open(raw_path, "wb") as f:
+            f.write(contents)
+        # Process and clean the file
         df = pd.read_csv(io.BytesIO(contents))
         df_clean = df.dropna(how='all')
-        # You could store df_clean to disk or a database here
-        return {"message": "CSV uploaded and cleaned successfully! 🧹✨"}
+        # Save the cleaned file
+        clean_path = os.path.join(processed_dir, file.filename)
+        df_clean.to_csv(clean_path, index=False)
+        return {"message": "CSV uploaded, raw and cleaned files saved successfully! 🧹✨"}
     except Exception as e:
         return JSONResponse(status_code=400, content={"error": f"Failed to process CSV: {str(e)}"})
 
