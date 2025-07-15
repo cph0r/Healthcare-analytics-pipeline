@@ -8,6 +8,7 @@ import re
 from db.database import get_engine, init_all_tables, DB_PATH
 import glob
 from sqlalchemy import inspect
+import sqlalchemy
 
 app = FastAPI()
 
@@ -97,6 +98,69 @@ def age_distribution():
     # Return all ages for histogram/box plot
     ages = df['age'].dropna().tolist()
     return {"ages": ages}
+
+@app.get('/api/analytics/admission-type-distribution')
+def admission_type_distribution():
+    engine = get_engine()
+    table_name = get_latest_table_name(engine)
+    if not table_name:
+        return JSONResponse(status_code=404, content={"error": "No data table found."})
+    query = f'''
+        SELECT at.description as label, COUNT(*) as count
+        FROM "{table_name}" d
+        LEFT JOIN admission_types at ON d.admission_type_id = at.admission_ty
+        GROUP BY at.description
+        ORDER BY count DESC
+        LIMIT 3
+    '''
+    with engine.connect() as conn:
+        result = conn.execute(sqlalchemy.text(query))
+        rows = result.fetchall()
+    labels = [row[0] if row[0] is not None else 'Unknown' for row in rows]
+    counts = [row[1] for row in rows]
+    return {"labels": labels, "counts": counts}
+
+@app.get('/api/analytics/admission-source-distribution')
+def admission_source_distribution():
+    engine = get_engine()
+    table_name = get_latest_table_name(engine)
+    if not table_name:
+        return JSONResponse(status_code=404, content={"error": "No data table found."})
+    query = f'''
+        SELECT ast.description as label, COUNT(*) as count
+        FROM "{table_name}" d
+        LEFT JOIN admission_source_types ast ON d.admission_source_id = ast.admission_source_i
+        GROUP BY ast.description
+        ORDER BY count DESC
+        LIMIT 3
+    '''
+    with engine.connect() as conn:
+        result = conn.execute(sqlalchemy.text(query))
+        rows = result.fetchall()
+    labels = [row[0] if row[0] is not None else 'Unknown' for row in rows]
+    counts = [row[1] for row in rows]
+    return {"labels": labels, "counts": counts}
+
+@app.get('/api/analytics/discharge-disposition-distribution')
+def discharge_disposition_distribution():
+    engine = get_engine()
+    table_name = get_latest_table_name(engine)
+    if not table_name:
+        return JSONResponse(status_code=404, content={"error": "No data table found."})
+    query = f'''
+        SELECT dt.description as label, COUNT(*) as count
+        FROM "{table_name}" d
+        LEFT JOIN discharge_types dt ON d.discharge_disposition_id = dt.discharge_di
+        GROUP BY dt.description
+        ORDER BY count DESC
+        LIMIT 3
+    '''
+    with engine.connect() as conn:
+        result = conn.execute(sqlalchemy.text(query))
+        rows = result.fetchall()
+    labels = [row[0] if row[0] is not None else 'Unknown' for row in rows]
+    counts = [row[1] for row in rows]
+    return {"labels": labels, "counts": counts}
 
 def get_latest_table_name(engine):
     # Get the most recently created/modified table (by name, assuming upload order)

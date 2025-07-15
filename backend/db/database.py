@@ -97,14 +97,12 @@ def init_admission_types_table():
         """))
         result = conn.execute(sqlalchemy.text("SELECT COUNT(*) FROM admission_types"))
         count = result.scalar()
-        print(f"admission_types count: {count}")
         if count == 0:
             for row in ADMISSION_TYPES:
                 conn.execute(sqlalchemy.text(
                     "INSERT INTO admission_types (admission_ty, description) VALUES (:admission_ty, :description)"),
                     parameters=row
                 )
-            print("admission_types table populated!")
 
 def init_discharge_types_table():
     engine = get_engine()
@@ -117,14 +115,12 @@ def init_discharge_types_table():
         """))
         result = conn.execute(sqlalchemy.text("SELECT COUNT(*) FROM discharge_types"))
         count = result.scalar()
-        print(f"discharge_types count: {count}")
         if count == 0:
             for row in DISCHARGE_TYPES:
                 conn.execute(sqlalchemy.text(
                     "INSERT INTO discharge_types (discharge_di, description) VALUES (:discharge_di, :description)"),
                     parameters=row
                 )
-            print("discharge_types table populated!")
 
 
 def init_admission_source_types_table():
@@ -138,7 +134,6 @@ def init_admission_source_types_table():
         """))
         result = conn.execute(sqlalchemy.text("SELECT COUNT(*) FROM admission_source_types"))
         count = result.scalar()
-        print(f"admission_types count: {count}")
         if count == 0:
             for row in ADMISSION_SOURCE_TYPES:
                 conn.execute(sqlalchemy.text(

@@ -1,17 +1,20 @@
 import React, { useState } from "react";
 import AnalyticsPlots from "./AnalyticsPlots";
+import AdmissionPatternsPlots from "./AdmissionPatternsPlots";
 
 const CSVUploader: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [analytics, setAnalytics] = useState<any>(null);
+  const [admissionPatterns, setAdmissionPatterns] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSuccess(false);
     setError(null);
     setAnalytics(null);
+    setAdmissionPatterns(null);
     if (e.target.files && e.target.files.length > 0) {
       setFile(e.target.files[0]);
     }
@@ -22,6 +25,7 @@ const CSVUploader: React.FC = () => {
     setSuccess(false);
     setError(null);
     setAnalytics(null);
+    setAdmissionPatterns(null);
     setLoading(true);
     const formData = new FormData();
     formData.append("file", file);
@@ -35,12 +39,16 @@ const CSVUploader: React.FC = () => {
       if (res.ok) {
         setSuccess(true);
         // Fetch analytics data after successful upload
-        const [race, gender, age] = await Promise.all([
+        const [race, gender, age, admissionType, admissionSource, dischargeDisposition] = await Promise.all([
           fetch("http://localhost:8000/api/analytics/race-distribution").then(r => r.json()),
           fetch("http://localhost:8000/api/analytics/gender-distribution").then(r => r.json()),
           fetch("http://localhost:8000/api/analytics/age-distribution").then(r => r.json()),
+          fetch("http://localhost:8000/api/analytics/admission-type-distribution").then(r => r.json()),
+          fetch("http://localhost:8000/api/analytics/admission-source-distribution").then(r => r.json()),
+          fetch("http://localhost:8000/api/analytics/discharge-disposition-distribution").then(r => r.json()),
         ]);
         setAnalytics({ race, gender, age });
+        setAdmissionPatterns({ admissionType, admissionSource, dischargeDisposition });
       } else {
         setError(data.error || "Upload failed");
       }
@@ -91,6 +99,7 @@ const CSVUploader: React.FC = () => {
         </div>
       )}
       {analytics && !loading && <AnalyticsPlots analytics={analytics} />}
+      {admissionPatterns && !loading && <AdmissionPatternsPlots patterns={admissionPatterns} />}
     </div>
   );
 };
