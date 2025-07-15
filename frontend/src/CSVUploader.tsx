@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import AnalyticsPlots from "./AnalyticsPlots";
 import AdmissionPatternsPlots from "./AdmissionPatternsPlots";
+import DiagnosisPlots from "./DiagnosisPlots";
+import MedicationPlots from "./MedicationPlots";
+import ReadmissionPlots from "./ReadmissionPlots";
 
 const CSVUploader: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -8,6 +11,9 @@ const CSVUploader: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [analytics, setAnalytics] = useState<any>(null);
   const [admissionPatterns, setAdmissionPatterns] = useState<any>(null);
+  const [diagnosisAnalytics, setDiagnosisAnalytics] = useState<any>(null);
+  const [medicationAnalytics, setMedicationAnalytics] = useState<any>(null);
+  const [readmissionAnalytics, setReadmissionAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -15,6 +21,9 @@ const CSVUploader: React.FC = () => {
     setError(null);
     setAnalytics(null);
     setAdmissionPatterns(null);
+    setDiagnosisAnalytics(null);
+    setMedicationAnalytics(null);
+    setReadmissionAnalytics(null);
     if (e.target.files && e.target.files.length > 0) {
       setFile(e.target.files[0]);
     }
@@ -26,6 +35,9 @@ const CSVUploader: React.FC = () => {
     setError(null);
     setAnalytics(null);
     setAdmissionPatterns(null);
+    setDiagnosisAnalytics(null);
+    setMedicationAnalytics(null);
+    setReadmissionAnalytics(null);
     setLoading(true);
     const formData = new FormData();
     formData.append("file", file);
@@ -39,16 +51,26 @@ const CSVUploader: React.FC = () => {
       if (res.ok) {
         setSuccess(true);
         // Fetch analytics data after successful upload
-        const [race, gender, age, admissionType, admissionSource, dischargeDisposition] = await Promise.all([
+        const [race, gender, age, admissionType, admissionSource, dischargeDisposition, topDiagnoses, readmissionByDiagnosis, medicationUsage, medicationReadmission, readmissionDistribution, readmissionByAge, readmissionByDemographics] = await Promise.all([
           fetch("http://localhost:8000/api/analytics/race-distribution").then(r => r.json()),
           fetch("http://localhost:8000/api/analytics/gender-distribution").then(r => r.json()),
           fetch("http://localhost:8000/api/analytics/age-distribution").then(r => r.json()),
           fetch("http://localhost:8000/api/analytics/admission-type-distribution").then(r => r.json()),
           fetch("http://localhost:8000/api/analytics/admission-source-distribution").then(r => r.json()),
           fetch("http://localhost:8000/api/analytics/discharge-disposition-distribution").then(r => r.json()),
+          fetch("http://localhost:8000/api/analytics/top-diagnoses").then(r => r.json()),
+          fetch("http://localhost:8000/api/analytics/readmission-by-diagnosis").then(r => r.json()),
+          fetch("http://localhost:8000/api/analytics/medication-usage").then(r => r.json()),
+          fetch("http://localhost:8000/api/analytics/medication-readmission").then(r => r.json()),
+          fetch("http://localhost:8000/api/analytics/readmission-distribution").then(r => r.json()),
+          fetch("http://localhost:8000/api/analytics/readmission-by-age").then(r => r.json()),
+          fetch("http://localhost:8000/api/analytics/readmission-by-demographics").then(r => r.json()),
         ]);
         setAnalytics({ race, gender, age });
         setAdmissionPatterns({ admissionType, admissionSource, dischargeDisposition });
+        setDiagnosisAnalytics({ topDiagnoses, readmissionByDiagnosis });
+        setMedicationAnalytics({ medicationUsage, medicationReadmission });
+        setReadmissionAnalytics({ readmissionDistribution, readmissionByAge, readmissionByDemographics });
       } else {
         setError(data.error || "Upload failed");
       }
@@ -100,6 +122,9 @@ const CSVUploader: React.FC = () => {
       )}
       {analytics && !loading && <AnalyticsPlots analytics={analytics} />}
       {admissionPatterns && !loading && <AdmissionPatternsPlots patterns={admissionPatterns} />}
+      {diagnosisAnalytics && !loading && <DiagnosisPlots diagnosis={diagnosisAnalytics} />}
+      {medicationAnalytics && !loading && <MedicationPlots medication={medicationAnalytics} />}
+      {readmissionAnalytics && !loading && <ReadmissionPlots readmission={readmissionAnalytics} />}
     </div>
   );
 };
