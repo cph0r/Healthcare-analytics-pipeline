@@ -1,2 +1,5 @@
 data/
 .env
+analytics/length_of_stay_analysis.joblib
+analytics/readmission_analysis.joblib
+analytics/scaler.joblib
